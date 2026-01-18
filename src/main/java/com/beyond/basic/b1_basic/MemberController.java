@@ -145,7 +145,7 @@ public class MemberController {
 //    case3. body의 content-type이 json인 경우
 //    case3-1) 일반적인 json데이터 처리
 //    이 방식을 제일 많이 사용
-//    형식 : {"name":"hongildong, "email":"hong@naver.com"}
+//    형식 : {"name":"hongildong", "email":"hong@naver.com"}
     @PostMapping("/json")
     @ResponseBody
 //    RequestBody : json데이터를 객체로 파싱하는 어노테이션
@@ -155,7 +155,6 @@ public class MemberController {
     }
 
 //    case3-2) 배열형식의 json데이터 처리
-//    이 방식을 제일 많이 사용
 //    형식 : [{"name":"hongildong, "email":"hong1@naver.com"},{"name":"hongildong, "email":"hong123@naver.com"}]
     @PostMapping("/json-list")
     @ResponseBody
@@ -166,6 +165,7 @@ public class MemberController {
     }
 
 //    case3-3) 중첩된 json데이터 처리
+//    Student클래스 만들어서 중첩json데이터 처리하는 방법 실습
 //    데이터형식 : {"name":"hongildong", "email":"hong1@naver.com","scores":[{"subject":"math","point":100},{"subject":"English","point":90},{"subject":"korean","point":100}]}
     @PostMapping("/json-nested")
     @ResponseBody
@@ -180,7 +180,9 @@ public class MemberController {
 //    결론은 multipart-formdata구조안에 json을 넣는 방식
     @PostMapping("/json-file")
     @ResponseBody
+//    보낼때에는 Multipart-formdata방식
 //    json과 file을 함께처리 해야할때에는 일반적으로 RequestPart사용
+//    RequestPart가 하나 있으면 파일처리할때에도 같이 RequestPart사용
     public String jsonFile(@RequestPart("member") Member member,
                            @RequestPart("profileImage") MultipartFile profileImage){
         System.out.println(member);
