@@ -1,19 +1,20 @@
 package com.beyond.basic.b2_board.author.repository;
 
 import com.beyond.basic.b2_board.author.domain.Author;
+import org.springframework.stereotype.Repository;
 
-import javax.swing.text.html.Option;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public class AuthorRepository {
+@Repository
+public class AuthorMemoryRepository {
     private List<Author> authorList = new ArrayList<>(); //초기화 시켰기때문에 Optional로 안감쌈
     private static Long staticId=1L;
 
     public void save(Author author){
         this.authorList.add(author);
-        author.setId(staticId++);
+//        author.setId(staticId++);
     }
     public List<Author> findAll(){
         return this.authorList;
