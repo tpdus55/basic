@@ -41,6 +41,29 @@ public class AuthorJdbcRepository {
         }
     }
 
+    public Optional<Author> findByEmail(String intputEmail){
+        Author author = null;
+        try {
+            Connection connection = dataSource.getConnection();
+            String sql = "select * from author where email = ?";
+            PreparedStatement ps = connection.prepareStatement(sql);
+            ps.setString(1, intputEmail);
+            ResultSet rs = ps.executeQuery(); //조회결과의 경우 ResultSet 자료구조 사용해야함
+            if (rs.next()){
+                Long id = rs.getLong("id");
+                String name = rs.getString("name");
+                String email = rs.getString("email");
+                String password = rs.getString("password");
+                author = Author.builder()
+                        .id(id).name(name).email(email).password(password)
+                        .build();
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return Optional.ofNullable(author);
+    }
+
     public Optional<Author> findById(Long inputId){
         Author author = null;
         try {
@@ -85,6 +108,19 @@ public class AuthorJdbcRepository {
             throw new RuntimeException(e);
         }
         return authorList;
+    }
+
+    public void delete(Long id){
+        try {
+            Connection connection = dataSource.getConnection();
+            String sql = "delete from author where id = ? ";
+            PreparedStatement ps = connection.prepareStatement(sql);
+            ps.setLong(1,id);
+            ps.executeUpdate(); //삭제 시에도 Update 사용
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
     }
 
 }
