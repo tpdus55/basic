@@ -6,6 +6,8 @@ import com.beyond.basic.b2_board.author.dtos.AuthorDetailDto;
 import com.beyond.basic.b2_board.author.dtos.AuthorListDto;
 import com.beyond.basic.b2_board.author.dtos.AuthorUpdatePwDto;
 import com.beyond.basic.b2_board.author.repository.*;
+import com.beyond.basic.b2_board.post.domain.Post;
+import com.beyond.basic.b2_board.post.respository.PostRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,10 +36,12 @@ public class AuthorService {
 //    장점 2) 다형성 구현 가능(interface 사용가능)
 //    장점 3) 순환참조방지(컴파일타임에 에러 check)
     private final AuthorRepository authorRepository;
+    private final PostRepository postRepository;
 //    생성자가 하나밖에 없을 때에는 Autowired 생략 가능
     @Autowired
-    public AuthorService(AuthorRepository authorRepository){
+    public AuthorService(AuthorRepository authorRepository, PostRepository postRepository){
         this.authorRepository = authorRepository;
+        this.postRepository = postRepository;
     }
 
 //    의존성 주입 방법3. RequiredArgsConstructor 어노테이션 사용
@@ -66,9 +70,13 @@ public class AuthorService {
             throw new IllegalArgumentException("이메일이 중복입니다.");
         }
         Author author = dto.toEntity();
-        authorRepository.save(author);
+        Author authorDb = authorRepository.save(author); //영속성 컨텍스트에 넣어놓고
+//        cascade persist를 활용한 예시
+        author.getPostList().add(Post.builder().title("안녕하세요").author(authorDb).build()); //save한 후 수정
 
-//
+////        cascade 옵션이 아닌 예시
+//        postRepository.save(Post.builder().title("안녕하세요").author(authorDb).build());
+
 
 ////        예외 발생 시 transactional 어노테이션에 의해 rollback처리
 //        authorRepository.findById(10L).orElseThrow(()-> new NoSuchElementException("entity is not found"));
@@ -79,6 +87,8 @@ public class AuthorService {
     public AuthorDetailDto findById(Long id){
         Optional<Author> optAuthor = authorRepository.findById(id);
         Author author = optAuthor.orElseThrow(()-> new NoSuchElementException("entity is not found"));
+
+//        List<Post> postList = postRepository.findAllByAuthorIdAndDelYn(author.getId(),"N");
 ////        dto조립(Author->dto)
 //        AuthorDetailDto dto = AuthorDetailDto.builder()
 //                .id(author.getId())
@@ -87,7 +97,9 @@ public class AuthorService {
 //                .password(author.getPassword())
 //                .build();
 //        fromEntity는 아직 dto객체가 만들어지지 않은 상태이므로 static 메서드로 설계
+//        AuthorDetailDto dto = AuthorDetailDto.fromEntity(author,0);
         AuthorDetailDto dto = AuthorDetailDto.fromEntity(author);
+
         return dto;
     }
     @Transactional(readOnly = true)

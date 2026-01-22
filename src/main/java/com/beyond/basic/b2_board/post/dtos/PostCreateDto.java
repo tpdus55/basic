@@ -7,8 +7,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
-
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
@@ -19,13 +17,13 @@ public class PostCreateDto {
     private String category;
     private String authorEmail;
 
-    public Post toEntity(){
+    public Post toEntity(Author author){
         return Post.builder()
                 .title(this.title)
                 .contents(this.contents)
-                .category(this.contents)
-                .authorEmail(this.authorEmail)
-                .delYn("n")
+                .category(this.category)
+                .author(author)
+//                .delYn("N")
                 .build();
     }
 

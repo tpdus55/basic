@@ -16,17 +16,20 @@ import java.util.List;
 public class PostDetailDto {
     private Long id;
     private String title;
-    private String category;
     private String contents;
+    private String category;
     private String authorEmail;
 
+//    public static PostDetailDto fromEntity(Post post,Author author){
     public static PostDetailDto fromEntity(Post post){
         return PostDetailDto.builder()
                 .id(post.getId())
                 .title(post.getTitle())
                 .category(post.getCategory())
                 .contents(post.getContents())
-                .authorEmail(post.getAuthorEmail())
+//                .authorEmail(author.getEmail())
+                .authorEmail(post.getAuthor().getEmail())
+//                .author(author) -> 중첩객체가 됨. 이렇게 하면 안됨
                 .build();
     }
 }

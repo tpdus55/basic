@@ -8,8 +8,7 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Optional;
 
-@Repository
-public interface PostRepository extends JpaRepository<Post,Long> {
-//    삭제 안된 글이 여러 개 있을 수 있음 -> list로 설정, 결과가 하나면 Optional설정
-    List<Post> findByDelYn(String delYn);
+public interface PostRepository extends JpaRepository<Post, Long> {
+    List<Post> findAllByDelYn(String delYn);
+//    List<Post> findAllByAuthorIdAndDelYn(Long authorId, String delYn);
 }
