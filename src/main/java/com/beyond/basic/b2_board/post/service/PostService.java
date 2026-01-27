@@ -13,6 +13,7 @@ import com.beyond.basic.b2_board.post.dtos.PostListDto;
 import com.beyond.basic.b2_board.post.respository.PostRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -38,7 +39,11 @@ public class PostService {
 
     public void save(PostCreateDto dto){
 ////        authorEmail 존재 유효성 체크
-        Author author = authorRepository.findByEmail(dto.getAuthorEmail())
+//        Author author = authorRepository.findByEmail(dto.getAuthorEmail())
+//                .orElseThrow(()->new EntityNotFoundException("존재하지 않은 이메일입니다."));
+        String email = SecurityContextHolder.getContext().getAuthentication().getPrincipal().toString(); //principal의 email을 꺼낸다라는 뜻
+        System.out.println(email);
+        Author author = authorRepository.findByEmail(email)
                 .orElseThrow(()->new EntityNotFoundException("존재하지 않은 이메일입니다."));
 
 //        게시글 등록
@@ -48,7 +53,8 @@ public class PostService {
     }
     @Transactional(readOnly = true)
     public List<PostListDto> findAll(){
-        List<Post> postList = postRepository.findAllByDelYn("N"); //게시글삭제가 안된 것들만 목록에 나오게 함
+//        List<Post> postList = postRepository.findAllByDelYn("N");//게시글삭제가 안된 것들만 목록에 나오게 함
+        List<Post> postList = postRepository.findAllFetchInnerJoin();
         List<PostListDto> postListDtos = new ArrayList<>();
         for(Post p : postList){
             PostListDto dto = PostListDto.fromEntity(p);

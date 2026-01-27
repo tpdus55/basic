@@ -1,18 +1,19 @@
 package com.beyond.basic.b2_board.author.service;
 
 import com.beyond.basic.b2_board.author.domain.Author;
-import com.beyond.basic.b2_board.author.dtos.AuthorCreateDto;
-import com.beyond.basic.b2_board.author.dtos.AuthorDetailDto;
-import com.beyond.basic.b2_board.author.dtos.AuthorListDto;
-import com.beyond.basic.b2_board.author.dtos.AuthorUpdatePwDto;
+import com.beyond.basic.b2_board.author.dtos.*;
 import com.beyond.basic.b2_board.author.repository.*;
+import com.beyond.basic.b2_board.common.auth.JwtTokenFilter;
 import com.beyond.basic.b2_board.post.domain.Post;
 import com.beyond.basic.b2_board.post.respository.PostRepository;
 import jakarta.persistence.EntityNotFoundException;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
@@ -37,11 +38,15 @@ public class AuthorService {
 //    장점 3) 순환참조방지(컴파일타임에 에러 check)
     private final AuthorRepository authorRepository;
     private final PostRepository postRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final JwtTokenFilter jwtTokenFilter;
 //    생성자가 하나밖에 없을 때에는 Autowired 생략 가능
     @Autowired
-    public AuthorService(AuthorRepository authorRepository, PostRepository postRepository){
+    public AuthorService(AuthorRepository authorRepository, PostRepository postRepository, PasswordEncoder passwordEncoder, JwtTokenFilter jwtTokenFilter){
         this.authorRepository = authorRepository;
         this.postRepository = postRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.jwtTokenFilter = jwtTokenFilter;
     }
 
 //    의존성 주입 방법3. RequiredArgsConstructor 어노테이션 사용
@@ -69,7 +74,8 @@ public class AuthorService {
         if(authorRepository.findByEmail(dto.getEmail()).isPresent()){
             throw new IllegalArgumentException("이메일이 중복입니다.");
         }
-        Author author = dto.toEntity();
+
+        Author author = dto.toEntity(passwordEncoder.encode(dto.getPassword()));
         Author authorDb = authorRepository.save(author); //영속성 컨텍스트에 넣어놓고
 //        cascade persist를 활용한 예시
         author.getPostList().add(Post.builder().title("안녕하세요").author(authorDb).build()); //save한 후 수정
@@ -102,6 +108,15 @@ public class AuthorService {
 
         return dto;
     }
+    @Transactional(readOnly = true)
+    public AuthorDetailDto myInfo(){
+        String email = SecurityContextHolder.getContext().getAuthentication().getPrincipal().toString();
+        Optional<Author> optAuthor = authorRepository.findByEmail(email);
+        Author author = optAuthor.orElseThrow(()-> new NoSuchElementException("entity is not found"));
+        AuthorDetailDto dto = AuthorDetailDto.fromEntity(author);
+        return dto;
+    }
+
     @Transactional(readOnly = true)
     public List<AuthorListDto> findAll(){
 //        List<Author> authorList = authorRepository.findAll();
@@ -137,5 +152,20 @@ public class AuthorService {
 //        1. 영속성 컨텍스트 : 애플리케이션과 DB사이에서 객체를 보관하는 가상의 DB 역할수행
 //        장점 1) 쓰기지연 : insert, update 등의 작업사항을 즉시 실행하지 않고, 커밋시점에 모아서 실행(성능향상)
 //            2) 변경감지(dirty checking) : 영속상태(managed)의 엔티티는 트랜잭션 커밋시점에 변경감지를 통해 별도의 save없이 DB에 반영
+    }
+    public Author login(AuthorEmailPwDto dto){
+        Optional<Author> optAuthor = authorRepository.findByEmail(dto.getEmail());
+        boolean check = true;
+        if(!optAuthor.isPresent()){
+            check = false;
+        }else{
+            if(!passwordEncoder.matches(dto.getPassword(), optAuthor.get().getPassword())){
+                check = false;
+            }
+        }
+        if(!check){
+            throw new IllegalArgumentException("email 또는 비밀번호가 일치하지 않습니다");
+        }
+        return optAuthor.get();
     }
 }

@@ -1,16 +1,16 @@
 package com.beyond.basic.b2_board.author.controller;
 
 import com.beyond.basic.b2_board.author.domain.Author;
-import com.beyond.basic.b2_board.author.dtos.AuthorCreateDto;
-import com.beyond.basic.b2_board.author.dtos.AuthorDetailDto;
-import com.beyond.basic.b2_board.author.dtos.AuthorListDto;
-import com.beyond.basic.b2_board.author.dtos.AuthorUpdatePwDto;
+import com.beyond.basic.b2_board.author.dtos.*;
 import com.beyond.basic.b2_board.author.service.AuthorService;
-import com.beyond.basic.b2_board.common.CommonErrorDto;
+import com.beyond.basic.b2_board.common.auth.JwtTokenProvider;
+import com.beyond.basic.b2_board.common.dtos.CommonErrorDto;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,9 +20,11 @@ import java.util.NoSuchElementException;
 @RequestMapping("/author")
 public class AuthorController {
     private final AuthorService authorService;
+    private final JwtTokenProvider jwtTokenProvider;
     @Autowired
-    public AuthorController(AuthorService authorService){
+    public AuthorController(AuthorService authorService, JwtTokenProvider jwtTokenProvider){
         this.authorService = authorService;
+        this.jwtTokenProvider = jwtTokenProvider;
     }
 
 //    회원가입
@@ -48,6 +50,9 @@ public class AuthorController {
     }
 //    회원목록조회
     @GetMapping("/list")
+//    PreAuthorize: Authentication객체 안의 권한정보를 확인하는 어노테이션
+//    2개 이상의 Role을 허용하는 경우 :"hasRole('ADMIN') or hasRole('SELLER')"
+    @PreAuthorize("hasRole('ADMIN')") //ROLE_ 가 붙어있는지 찾는 어노테이션
     public List<AuthorListDto> findAll(){
         List<AuthorListDto> dtoList = authorService.findAll();
         return dtoList;
@@ -68,8 +73,9 @@ public class AuthorController {
 //        }
 
 
-        @GetMapping("/{id}")
-        public ResponseEntity<?> findbyId(@PathVariable Long id){
+    @GetMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> findbyId(@PathVariable Long id){
         try {
             AuthorDetailDto dto = authorService.findById(id);
             return ResponseEntity.status(HttpStatus.OK).body(dto);
@@ -83,6 +89,14 @@ public class AuthorController {
         }
 
     }
+    @GetMapping("/myinfo")
+    public ResponseEntity<?> myInfo(@AuthenticationPrincipal String principal){
+        System.out.println(principal);
+        AuthorDetailDto dto = authorService.myInfo();
+        return ResponseEntity.status(HttpStatus.OK).body(dto);
+    }
+
+
 
 //    회원탈퇴
     @DeleteMapping("/{id}")
@@ -95,6 +109,16 @@ public class AuthorController {
     @PatchMapping("/update/password")
     public void updatePw(@RequestBody AuthorUpdatePwDto updatePwDto){
         authorService.update(updatePwDto);
+    }
+
+//    로그인
+    @PostMapping("/login")
+    public String login(@RequestBody AuthorEmailPwDto dto){
+        Author author = authorService.login(dto);
+
+//        토큰 생성 및 리턴
+        String token = jwtTokenProvider.createToken(author);
+        return token;
     }
 }
 //dto는 service에서 entity로 변환(중요*******)

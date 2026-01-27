@@ -1,14 +1,11 @@
 package com.beyond.basic.b2_board.author.domain;
 
 import com.beyond.basic.b2_board.author.dtos.Address;
-import com.beyond.basic.b2_board.common.BaseTimeEntity;
+import com.beyond.basic.b2_board.common.domain.BaseTimeEntity;
 import com.beyond.basic.b2_board.post.domain.Post;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -53,8 +50,8 @@ public class Author extends BaseTimeEntity {
 //        persist를 쓸때에는 반드시 초기화해줘야함
     private List<Post> postList = new ArrayList<>();
 
-    @OneToOne(mappedBy = "author",fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    private Address address;
+//    @OneToOne(mappedBy = "author",fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+//    private Address address;
 
     public void updatePassword(String password){
         this.password = password;

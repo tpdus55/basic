@@ -1,19 +1,15 @@
 package com.beyond.basic.b2_board.post.controller;
 
-import com.beyond.basic.b2_board.author.repository.AuthorRepository;
-import com.beyond.basic.b2_board.common.CommonErrorDto;
 import com.beyond.basic.b2_board.post.dtos.PostCreateDto;
 import com.beyond.basic.b2_board.post.dtos.PostDetailDto;
 import com.beyond.basic.b2_board.post.dtos.PostListDto;
 import com.beyond.basic.b2_board.post.service.PostService;
-import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.NoSuchElementException;
 
 @RestController
 public class PostController {
